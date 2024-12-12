@@ -7,6 +7,7 @@ from rich.style import Style
 from rich.text import Text
 from rich.color import ANSI_COLOR_NAMES
 import traceback
+import time
 
 class Screen:
     def __init__(self):
@@ -16,11 +17,16 @@ class Screen:
         self.color_mode = None
         self.buffer = []
         self.colors = []
+        self.cursor_x = 0
+        self.cursor_y = 0
+        self.cursor_visible = True
         
     def setup(self, width, height, color_mode):
         self.width = width
         self.height = height
         self.color_mode = color_mode
+        self.cursor_x = 0
+        self.cursor_y = 0
         # Determine color system and set console color mode accordingly.
         if color_mode == 0:  # Monochrome
             self.console = Console(color_system="MONOCHROME")
@@ -66,23 +72,27 @@ class Screen:
         dy = y2 - y1
         steps = max(abs(dx), abs(dy))
         if steps == 0:
-            self.draw_char(x1, y1, color, chr(char))
+            self.draw_char(x1, y1, color, char)
         else:
             for i in range(steps + 1):
                 x = x1 + i * dx // steps
                 y = y1 + i * dy // steps
-                self.draw_char(x, y, color, chr(char))
+                self.draw_char(x, y, color, char)
                 
     def draw_text(self, x, y, color, text):
         for i, char in enumerate(text):
-            self.draw_char(x + i, y, color, chr(char))
+            self.draw_char(x + i, y, color, char)
+            time.sleep(0.5)
             
-    # def cursor_move(self, x, y): #mvoe the cursor to the specified position without drawing anything
-    #     self.stdscr.move(y, x)  
+    def move_cursor(self, x, y):
+        if 0 <= x < self.width and 0 <= y < self.height:
+            self.cursor_x = x
+            self.cursor_y = y
+        else:
+            self.console.print(Text("Cursor move out of bounds.", style="bold red"))
         
-    # def draw_char_at_cursor(self, color, char):
-    #     self.cursor_move(self.stdscr.getyx()[1], self.stdscr.getyx()[0])
-    #     self.stdscr.addch(char, curses.color_pair(color))
+    def draw_char_at_cursor(self, color, char):
+        self.draw_char(self.cursor_x, self.cursor_y, color, char)
             
     def draw_rect(self, x, y, width, height, color):
         for i in range(y, y + height):
@@ -92,13 +102,14 @@ class Screen:
     def clear(self):
         self.buffer = [[' ' for _ in range(self.width)] for _ in range(self.height)]
         
-    def render_screen(self):
+    def render_screen(self, last_command=None):
         # Converts the buffer into a rich.Text object for rendering.
-        text = Text()
-        for row in self.buffer:
-            for cell in row:
-                if "[" in cell and "]" in cell:  # Handle rich tags
-                    text.append(cell, style=None)
+        text = Text(f'Cursor: ({self.cursor_x}, {self.cursor_y})\n', style="bold blue")
+        text.append(Text(f'Last Command: {last_command}\n', style="bold blue"))
+        for y, row in enumerate(self.buffer):
+            for x, cell in enumerate(row):
+                if self.cursor_visible and x == self.cursor_x and y == self.cursor_y:
+                    text.append(Text("|", style="bold green"))
                 else:
                     text.append(cell)
             text.append("\n")  # Add a newline at the end of each row
@@ -149,9 +160,9 @@ def parse_binary_stream(file_path, screen):
                     screen.draw_text(x, y, color, text)
                 elif command == 0x5: #cursor move
                     x, y = struct.unpack('BB', data)
-                    screen.cursor_move(x, y)
+                    screen.move_cursor(x, y)
                 elif command == 0x6: #draw char at cursor
-                    color, char = struct.unpack('cB', data)
+                    color, char = struct.unpack('BB', data)
                     screen.draw_char_at_cursor(color, chr(char))
                 elif command == 0x7: #draw rectangle
                     x, y, width, height, color = struct.unpack('BBBBB', data)
@@ -165,7 +176,9 @@ def parse_binary_stream(file_path, screen):
                 # screen.render_screen()
                 
                 # update the terminal screen
-                LiveConsole.update(Panel(screen.render_screen(), title="Screen Renderer"))
+                LiveConsole.update(Panel(screen.render_screen(last_command = f'Command: {command}'), title="Screen Renderer"))
+                screen.cursor_visible = not screen.cursor_visible # For the blinking effect
+                time.sleep(0.5)
         
     except FileNotFoundError as e:
         screen.console.print(Text('Binary file not found', style='bold red'))
