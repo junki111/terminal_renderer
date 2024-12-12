@@ -85,7 +85,7 @@ class Screen:
     def draw_text(self, x, y, color, text):
         for i, char in enumerate(text):
             self.draw_char(x + i, y, color, char)
-            time.sleep(0.2)
+            time.sleep(0.1)
             
     def move_cursor(self, x, y):
         if 0 <= x < self.width and 0 <= y < self.height:
@@ -94,7 +94,7 @@ class Screen:
         else:
             self.console.print(Text("Cursor move out of bounds.", style="bold red"))
         
-    def draw_char_at_cursor(self, color, char):
+    def draw_char_at_cursor(self, char, color):
         self.draw_char(self.cursor_x, self.cursor_y, color, char)
             
     def draw_rect(self, x, y, width, height, color):
@@ -134,14 +134,12 @@ def parse_binary_stream(file_path, screen, LiveConsole):
                 if not command:
                     break
                 command = struct.unpack('B', command)[0]
-                screen.console.print(Text(f'Command: {command}.', style="bold green"))
                 
                 # read the length byte
                 length = f.read(1)
                 if not length:
                     break
                 length = struct.unpack('B', length)[0]
-                screen.console.print(Text(f'Length: {length}.', style="bold green"))
                 
                 # Read the data bytes
                 data = f.read(length)
@@ -166,8 +164,8 @@ def parse_binary_stream(file_path, screen, LiveConsole):
                     x, y = struct.unpack('BB', data)
                     screen.move_cursor(x, y)
                 elif command == 0x6: #draw char at cursor
-                    color, char = struct.unpack('BB', data)
-                    screen.draw_char_at_cursor(color, chr(char))
+                    char, color = struct.unpack('BB', data)
+                    screen.draw_char_at_cursor(chr(char), color)
                 elif command == 0x7: #draw rectangle
                     x, y, width, height, color = struct.unpack('BBBBB', data)
                     screen.draw_rect(x, y, width, height, color)

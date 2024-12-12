@@ -20,7 +20,7 @@ commands = [
     (0x3, [7, 7, 35, 7, 2, ord('#')]),  # Draw horizontal line with 'B'
     (0x4, [0, 0, 3] + list(b"Hello Darkness My Old Friend")),  # Draw text "Hello" at (0, 0) with color 3
     (0x5, [15, 10]),  # Move cursor to (15, 10)
-    (0x6, [4, ord('X')]),  # Draw 'X' at cursor with color 4
+    (0x6, [ord('X'), 4]),  # Draw 'X' at cursor with color 4
     (0x5, [17, 10]),  # Move cursor to (15, 10)
     (0x7, [20, 10, 5, 5, 5]),  # Draw rectangle at (20, 10) with width=5, height=5, color=5
     (0xFF, []),  # End of stream
