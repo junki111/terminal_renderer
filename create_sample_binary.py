@@ -23,6 +23,7 @@ commands = [
     (0x6, [4, ord('X')]),  # Draw 'X' at cursor with color 4
     (0x5, [17, 10]),  # Move cursor to (15, 10)
     (0x7, [20, 10, 5, 5, 5]),  # Draw rectangle at (20, 10) with width=5, height=5, color=5
+    (0xFF, []),  # End of stream
 ]
 
 # Create a sample binary file

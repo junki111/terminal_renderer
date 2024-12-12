@@ -1,3 +1,4 @@
+import threading
 import struct
 from rich.console import Console
 from rich.panel import Panel
@@ -20,6 +21,7 @@ class Screen:
         self.cursor_x = 0
         self.cursor_y = 0
         self.cursor_visible = True
+        self.running = True  # State to keep the terminal active
         
     def setup(self, width, height, color_mode):
         self.width = width
@@ -114,16 +116,16 @@ class Screen:
                     text.append(cell)
             text.append("\n")  # Add a newline at the end of each row
         return text
-        
-    # def render_screen(self):
-    #     rendered_screen = "\n".join("".join(row) for row in self.buffer)
-    #     return rendered_screen
-    #     # self.console.clear()
-    #     # self.console.print(Panel(rendered_screen))
+    
+def cursor_blinker(screen, LiveConsole):
+    while screen.running:
+        screen.cursor_visible = not screen.cursor_visible
+        LiveConsole.update(Panel(screen.render_screen(last_command=""), title="Screen Renderer"))
+        time.sleep(0.2)
 
-def parse_binary_stream(file_path, screen):
+def parse_binary_stream(file_path, screen, LiveConsole):
     try:
-        with open(file_path, 'rb') as f, Live(screen.render_screen(), refresh_per_second=10) as LiveConsole:
+        with open(file_path, 'rb') as f:
             while True:
                 # read the command byte
                 command = f.read(1)
@@ -179,6 +181,8 @@ def parse_binary_stream(file_path, screen):
                 LiveConsole.update(Panel(screen.render_screen(last_command = f'Command: {command}'), title="Screen Renderer"))
                 screen.cursor_visible = not screen.cursor_visible # For the blinking effect
                 time.sleep(0.5)
+            
+            screen.running = False
         
     except FileNotFoundError as e:
         screen.console.print(Text('Binary file not found', style='bold red'))
@@ -188,8 +192,13 @@ def parse_binary_stream(file_path, screen):
    
 def main():
     screen = Screen()
-    parse_binary_stream('sample.bin', screen)
-            
+    with Live(screen.render_screen(), refresh_per_second=10) as LiveConsole:
+        # Start the cursor blinker thread
+        cursor_thread = threading.Thread(target=cursor_blinker, args=(screen, LiveConsole))
+        cursor_thread.start()
+        # Parse the binary stream
+        parse_binary_stream('sample.bin', screen, LiveConsole)
+         
 # Test the parsing function
 if __name__ == '__main__':
     main()
