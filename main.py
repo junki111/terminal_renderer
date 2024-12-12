@@ -80,11 +80,12 @@ class Screen:
                 x = x1 + i * dx // steps
                 y = y1 + i * dy // steps
                 self.draw_char(x, y, color, char)
+                time.sleep(0.1)
                 
     def draw_text(self, x, y, color, text):
         for i, char in enumerate(text):
             self.draw_char(x + i, y, color, char)
-            time.sleep(0.5)
+            time.sleep(0.2)
             
     def move_cursor(self, x, y):
         if 0 <= x < self.width and 0 <= y < self.height:
@@ -100,6 +101,7 @@ class Screen:
         for i in range(y, y + height):
             for j in range(x, x + width):
                 self.draw_char(j, i, color, '#')
+                time.sleep(0.1)
                 
     def clear(self):
         self.buffer = [[' ' for _ in range(self.width)] for _ in range(self.height)]
@@ -182,7 +184,12 @@ def parse_binary_stream(file_path, screen, LiveConsole):
                 screen.cursor_visible = not screen.cursor_visible # For the blinking effect
                 time.sleep(0.5)
             
-            screen.running = False
+        # After processing is complete, ensure cursor is visible and render final screen
+        screen.cursor_visible = True
+        LiveConsole.update(Panel(screen.render_screen(last_command="Processing Complete"), title="Screen Renderer"))
+        screen.running = False
+        
+        
         
     except FileNotFoundError as e:
         screen.console.print(Text('Binary file not found', style='bold red'))
