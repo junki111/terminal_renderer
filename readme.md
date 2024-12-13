@@ -87,5 +87,5 @@ Each command in the binary stream has the following format:
 
 ## Future Enhancements
 
-- **Cursor Update on print**: To make the cursor follow along with the text instead of remaining on the same position while text is printed elsewhere
+- **Cursor Update on print**: To make the cursor follow along with the text instead of remaining on the same position while text is printed elsewhere (**Completed**)
 - **Support for more commands**: To add more commands to the protocol for more functionalities
