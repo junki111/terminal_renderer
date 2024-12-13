@@ -61,6 +61,7 @@ class Screen:
     def draw_char(self, x, y, color, char):
         if 0 <= x < self.width and 0 <= y < self.height:
             try:
+                self.cursor_x, self.cursor_y = x+1, y
                 color_name = self.colors[color] if color < len(self.colors) else "white"
                 # self.buffer[y][x] = f'[{color_name}]{char}[/{color_name}]'
                 self.buffer[y][x] = Text(char, style=f'{color_name}')
