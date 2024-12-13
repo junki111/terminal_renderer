@@ -31,7 +31,7 @@ class Screen:
         self.cursor_y = 0
         # Determine color system and set console color mode accordingly.
         if color_mode == 0:  # Monochrome
-            self.console = Console(color_system="MONOCHROME")
+            self.console = Console(color_system="standard")
         elif color_mode == 1:  # 16 Colors
             self.console = Console(color_system="256")
         elif color_mode == 2:  # 256 Colors
@@ -105,6 +105,8 @@ class Screen:
                 
     def clear(self):
         self.buffer = [[' ' for _ in range(self.width)] for _ in range(self.height)]
+        self.cursor_x = 0
+        self.cursor_y = 0
         
     def render_screen(self, last_command=None):
         # Converts the buffer into a rich.Text object for rendering.
@@ -113,7 +115,7 @@ class Screen:
         for y, row in enumerate(self.buffer):
             for x, cell in enumerate(row):
                 if self.cursor_visible and x == self.cursor_x and y == self.cursor_y:
-                    text.append(Text("|", style="bold green"))
+                    text.append(Text("|", style="white"))
                 else:
                     text.append(cell)
             text.append("\n")  # Add a newline at the end of each row
@@ -191,9 +193,11 @@ def parse_binary_stream(file_path, screen, LiveConsole):
         
     except FileNotFoundError as e:
         screen.console.print(Text('Binary file not found', style='bold red'))
+        screen.running = False
     except Exception as e:
         screen.console.print(Text(f'An error occurred: {e}', style='bold red'))
         traceback.print_exc()
+        screen.running = False
    
 def main():
     screen = Screen()
