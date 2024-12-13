@@ -52,7 +52,7 @@ cd terminal_screen_renderer/src
 python main.py
 ```
 The program will use the sample.bin file in the src folder 
-In case you would want to create your own commands. Kindly refer to the usage section
+In case you would want to create your own commands. Kindly refer to the usage section and the sample.bin to guide you on what to do.
 
 NOTE: In case you have generated a different binary file based on the usage specification section then place it
 in the src folder and make sure to rename it to sample.bin
